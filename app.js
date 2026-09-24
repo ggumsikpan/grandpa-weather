@@ -238,6 +238,8 @@ function render({ data, time }) {
   dust.className = 'r-val dust-' + g;
 
   $('#advice').textContent = advice(data);
+  // 특보가 떠 있으면 빨간 띠가 조언 역할을 하니 한 줄 조언은 숨겨서 한 화면에 맞춤
+  $('#advice').hidden = !!(data.warnings && data.warnings.length);
 
   if (tomorrow) {
     $('#tmIcon').textContent = icon(tomorrow.kind);
@@ -246,20 +248,16 @@ function render({ data, time }) {
     $('#tmSub').textContent = `${deg(tomorrow.min)} ~ ${deg(tomorrow.max)}` + (rw ? ` · ${rw.replace(/^\S+\s/, '')}` : ' · 비 소식 없음');
   }
 
-  // 더 보기: 시간별 (3시간 간격)
-  const hs = [];
-  const todayDate = todayStr();
-  for (let k = 0; k < 8; k++) {
-    const x = data.hourly[k * 3];
-    if (!x) break;
+  // 첫 화면: 시간별 4칸 (3시간 간격, 앞으로 12시간)
+  const slots = [0, 3, 6, 9].map((k) => data.hourly[k]).filter(Boolean);
+  const wetOf = (x) => isSnowKind(x.kind) ? '❄ 눈' : (isWetKind(x.kind) || (x.pop ?? 0) >= 60) ? '☂ 비' : (x.pop ?? 0) >= 30 ? '☂ 조금' : '';
+  const anyWet = slots.some((x) => wetOf(x)); // 비 소식이 없으면 ☂ 줄 자체를 빼서 화면을 아낌
+  $('#hours').innerHTML = slots.map((x) => {
     const hh = +x.time.slice(11, 13);
-    const day = x.time.slice(0, 10) === todayDate ? '' : '내일 ';
-    const rw = rainWord(x.pop ?? 0, x.kind);
-    hs.push(`<li><div class="when"><b>${day}${hourLabel(hh)}</b><span>${x.text || ''}</span></div>
-      <div class="ic">${icon(x.kind, x.isDay !== undefined ? x.isDay : (hh >= 6 && hh < 19))}</div>
-      <div class="right"><div class="temp">${deg(x.temp)}</div>${rw ? `<div class="rainw">${rw}</div>` : ''}</div></li>`);
-  }
-  $('#hours').innerHTML = hs.join('');
+    return `<div class="hr"><div class="hr-t">${hourLabel(hh)}</div>
+      <div class="hr-ic">${icon(x.kind, x.isDay !== undefined ? x.isDay : (hh >= 6 && hh < 19))}</div>
+      <div class="hr-temp">${deg(x.temp)}</div>${anyWet ? `<div class="hr-rain">${wetOf(x) || '&nbsp;'}</div>` : ''}</div>`;
+  }).join('');
 
   // 더 보기: 이번 주
   const { idx } = pickDays(data);
@@ -345,7 +343,7 @@ $('#tabWeather').onclick = () => { if (layers.includes('map')) closeTopLayer(); 
 $('#btnMore').onclick = () => {
   const box = $('#moreBox');
   box.hidden = !box.hidden;
-  $('#btnMore').textContent = box.hidden ? '시간별·이번 주 날씨 더 보기 ▼' : '접기 ▲';
+  $('#btnMore').textContent = box.hidden ? '이번 주 날씨 더 보기 ▼' : '접기 ▲';
   $('#btnMore').setAttribute('aria-expanded', String(!box.hidden));
 };
 
