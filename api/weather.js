@@ -194,7 +194,7 @@ module.exports = async (req, res) => {
     pwn: call(kmaUrl('WthrWrnInfoService', 'getPwnStatus', { numOfRows: 10 })),
     air: (async () => {
       for (const st of stations) {
-        const j = await call(`${AIR}/getMsrstnAcctoRltmMesureDnsty?serviceKey=${encodeURIComponent(KEY)}&returnType=json&numOfRows=6&pageNo=1&dataTerm=DAILY&ver=1.3&stationName=${encodeURIComponent(st)}`);
+        const j = await call(`${AIR}/getMsrstnAcctoRltmMesureDnsty?serviceKey=${encodeURIComponent(KEY)}&returnType=json&numOfRows=6&pageNo=1&dataTerm=DAILY&ver=1.3&stationName=${encodeURIComponent(st)}`, 20000);
         const row = items(j).find((r) => num(r.pm10Value) != null || num(r.pm25Value) != null);
         if (row) return { row, st };
       }
