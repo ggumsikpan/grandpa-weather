@@ -1,0 +1,35 @@
+name: 날씨 자료 갱신
+
+on:
+  schedule:
+    - cron: '47 * * * *'   # 매시 47분 (기상청 실황 발표 뒤)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-weather
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 기상청·에어코리아 자료 받기
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+        run: node scripts/update-weather.js
+      - name: 저장
+        run: |
+          git config user.name "weather-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/weather.json
+          git commit -m "날씨 자료 갱신" || exit 0
+          git pull --rebase
+          git push
