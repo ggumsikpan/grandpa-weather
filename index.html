@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>큰글씨 날씨·지도</title>
+<meta name="description" content="광고 없는 큰글씨 날씨와 지도">
+<meta name="theme-color" content="#1e5bd8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="날씨지도">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ 날씨 화면 ============ -->
+<main id="view-weather" class="view active" aria-label="날씨">
+  <div class="topbar">
+    <button id="btnFont" class="chip" aria-label="글씨 크기 바꾸기">가<span class="big">가</span> 글씨 크기</button>
+    <button id="btnInstall" class="chip install" hidden>바탕화면에 설치</button>
+  </div>
+
+  <h1 id="place" class="place">위치 확인 중…</h1>
+  <div class="loc-row">
+    <button id="btnMyLoc" class="btn outline">📍 내 위치</button>
+    <button id="btnOtherPlace" class="btn outline">🔎 다른 동네</button>
+  </div>
+
+  <div id="msg" class="msg" hidden></div>
+
+  <section class="now" aria-live="polite">
+    <div id="nowIcon" class="now-icon">⏳</div>
+    <div id="nowTemp" class="now-temp">--°</div>
+    <div id="nowDesc" class="now-desc">불러오는 중</div>
+    <div id="nowSub" class="now-sub"></div>
+  </section>
+
+  <div id="advice" class="advice" hidden></div>
+
+  <section class="tiles">
+    <div class="tile"><div class="t-label">오늘 최고</div><div id="tMax" class="t-val hot">--°</div></div>
+    <div class="tile"><div class="t-label">오늘 최저</div><div id="tMin" class="t-val cold">--°</div></div>
+    <div class="tile"><div class="t-label">비 올 확률</div><div id="tRain" class="t-val">--%</div></div>
+    <div class="tile"><div class="t-label">미세먼지</div><div id="tDust" class="t-val">--</div></div>
+  </section>
+
+  <button id="btnSpeak" class="btn primary wide">🔊 소리로 듣기</button>
+
+  <h2>앞으로 몇 시간</h2>
+  <ul id="hours" class="list"></ul>
+
+  <h2>이번 주 날씨</h2>
+  <ul id="days" class="list"></ul>
+
+  <div class="updated-row">
+    <span id="updated" class="updated"></span>
+    <button id="btnRefresh" class="btn outline small">🔄 새로 확인</button>
+  </div>
+  <p class="credit">날씨 정보: Open-Meteo · 광고 없음</p>
+</main>
+
+<!-- ============ 지도 화면 ============ -->
+<main id="view-map" class="view" aria-label="지도">
+  <div id="map"></div>
+  <button id="btnMapSearch" class="map-searchbar">🔎 장소 찾기 (눌러서 검색)</button>
+  <div class="map-ctrl">
+    <button id="zIn" aria-label="크게 보기">＋</button>
+    <button id="zOut" aria-label="작게 보기">－</button>
+    <button id="mapMe" aria-label="내 위치로" class="me">📍</button>
+  </div>
+  <div id="sheet" class="sheet" hidden>
+    <div id="sheetName" class="sheet-name"></div>
+    <div id="sheetWx" class="sheet-wx"></div>
+    <div class="sheet-btns">
+      <button id="sheetGo" class="btn primary">이곳 날씨 자세히</button>
+      <button id="sheetClose" class="btn outline">닫기</button>
+    </div>
+  </div>
+</main>
+
+<!-- ============ 검색 창 ============ -->
+<div id="search" class="search" hidden role="dialog" aria-label="장소 찾기">
+  <div class="search-head">
+    <h2 id="searchTitle">장소 찾기</h2>
+    <button id="searchClose" class="btn outline small">닫기 ✕</button>
+  </div>
+  <form id="searchForm" class="search-form">
+    <input id="searchInput" type="search" enterkeyhint="search" autocomplete="off"
+           placeholder="예: 양평군, 마포구청, 부산역">
+    <button class="btn primary" type="submit">찾기</button>
+  </form>
+  <p id="searchHint" class="search-hint">동네 이름이나 건물 이름을 쓰고 <b>찾기</b>를 누르세요.</p>
+  <ul id="searchResults" class="list results"></ul>
+</div>
+
+<!-- ============ 아래 탭 ============ -->
+<nav class="tabbar">
+  <button id="tabWeather" class="tab active" aria-label="날씨 보기"><span>☀️</span>날씨</button>
+  <button id="tabMap" class="tab" aria-label="지도 보기"><span>🗺️</span>지도</button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
