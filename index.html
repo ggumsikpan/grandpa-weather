@@ -9,10 +9,9 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="날씨지도">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -20,81 +19,106 @@
 
 <!-- ============ 날씨 화면 ============ -->
 <main id="view-weather" class="view active" aria-label="날씨">
-  <div class="topbar">
-    <button id="btnFont" class="chip" aria-label="글씨 크기 바꾸기">가<span class="big">가</span> 글씨 크기</button>
-    <button id="btnInstall" class="chip install" hidden>바탕화면에 설치</button>
-  </div>
+  <div id="warn" class="warn" role="alert" hidden></div>
 
-  <h1 id="place" class="place">위치 확인 중…</h1>
-  <div class="loc-row">
-    <button id="btnMyLoc" class="btn outline">📍 내 위치</button>
-    <button id="btnOtherPlace" class="btn outline">🔎 다른 동네</button>
-  </div>
-
-  <div id="msg" class="msg" hidden></div>
+  <div id="today" class="today-date">&nbsp;</div>
+  <h1 id="place" class="place">&nbsp;</h1>
 
   <section class="now" aria-live="polite">
     <div id="nowIcon" class="now-icon">⏳</div>
-    <div id="nowTemp" class="now-temp">--°</div>
-    <div id="nowDesc" class="now-desc">불러오는 중</div>
-    <div id="nowSub" class="now-sub"></div>
+    <div class="now-right">
+      <div id="nowTemp" class="now-temp">--°</div>
+      <div id="nowDesc" class="now-desc">불러오는 중</div>
+    </div>
   </section>
 
-  <div id="advice" class="advice" hidden></div>
-
-  <section class="tiles">
-    <div class="tile"><div class="t-label">오늘 최고</div><div id="tMax" class="t-val hot">--°</div></div>
-    <div class="tile"><div class="t-label">오늘 최저</div><div id="tMin" class="t-val cold">--°</div></div>
-    <div class="tile"><div class="t-label">비 올 확률</div><div id="tRain" class="t-val">--%</div></div>
-    <div class="tile"><div class="t-label">미세먼지</div><div id="tDust" class="t-val">--</div></div>
+  <section class="rows">
+    <div class="row"><span class="r-label">오늘</span><span class="r-val"><span id="tMin" class="cold">--°</span> ~ <span id="tMax" class="hot">--°</span></span></div>
+    <div class="row"><span class="r-label">우산</span><span id="umbrella" class="r-val">--</span></div>
+    <div class="row"><span class="r-label">미세먼지</span><span id="dust" class="r-val">--</span></div>
   </section>
 
-  <button id="btnSpeak" class="btn primary wide">🔊 소리로 듣기</button>
+  <div id="advice" class="advice">&nbsp;</div>
 
-  <h2>앞으로 몇 시간</h2>
-  <ul id="hours" class="list"></ul>
+  <section class="tomorrow">
+    <div class="tm-top"><span class="r-label">내일</span><span id="tmIcon" class="tm-icon"></span><span id="tmText" class="tm-text">--</span></div>
+    <div id="tmSub" class="tm-sub">&nbsp;</div>
+  </section>
 
-  <h2>이번 주 날씨</h2>
-  <ul id="days" class="list"></ul>
+  <button id="btnSpeak" class="btn primary wide speak">🔊 소리로 듣기</button>
+
+  <!-- 여기부터는 아래로 내려야 보임 -->
+  <button id="btnMore" class="btn outline wide more" aria-expanded="false">시간별·이번 주 날씨 더 보기 ▼</button>
+  <div id="moreBox" hidden>
+    <h2>시간별 날씨</h2>
+    <ul id="hours" class="list"></ul>
+    <h2>이번 주 날씨</h2>
+    <ul id="days" class="list"></ul>
+  </div>
 
   <div class="updated-row">
     <span id="updated" class="updated"></span>
     <button id="btnRefresh" class="btn outline small">🔄 새로 확인</button>
   </div>
-  <p class="credit">날씨 정보: Open-Meteo · 광고 없음</p>
+
+  <button id="btnGuardian" class="guardian-link">⚙ 보호자 설정</button>
 </main>
 
 <!-- ============ 지도 화면 ============ -->
 <main id="view-map" class="view" aria-label="지도">
   <div id="map"></div>
-  <button id="btnMapSearch" class="map-searchbar">🔎 장소 찾기 (눌러서 검색)</button>
+  <button id="btnMapSearch" class="map-searchbar">🔎 장소 찾기</button>
   <div class="map-ctrl">
     <button id="zIn" aria-label="크게 보기">＋</button>
     <button id="zOut" aria-label="작게 보기">－</button>
     <button id="mapMe" aria-label="내 위치로" class="me">📍</button>
   </div>
-  <div id="sheet" class="sheet" hidden>
-    <div id="sheetName" class="sheet-name"></div>
-    <div id="sheetWx" class="sheet-wx"></div>
-    <div class="sheet-btns">
-      <button id="sheetGo" class="btn primary">이곳 날씨 자세히</button>
-      <button id="sheetClose" class="btn outline">닫기</button>
-    </div>
-  </div>
 </main>
 
+<!-- ============ 보호자 설정 ============ -->
+<div id="settings" class="overlay" hidden role="dialog" aria-label="보호자 설정">
+  <div class="ov-head">
+    <h2>보호자 설정</h2>
+  </div>
+
+  <h3>날씨 볼 동네</h3>
+  <div id="setPlace" class="set-value">--</div>
+  <button id="btnChangeHome" class="btn outline wide">🔎 동네 바꾸기</button>
+  <button id="btnResetHome" class="btn outline wide">처음 동네(인천 미추홀구)로 되돌리기</button>
+
+  <h3>미세먼지 측정소</h3>
+  <p class="set-note">에어코리아 측정소 이름입니다. 비워두면 가까운 지역 예측값을 씁니다.</p>
+  <form id="stationForm" class="search-form">
+    <input id="stationInput" type="text" autocomplete="off" placeholder="예: 숭의">
+    <button class="btn primary" type="submit">저장</button>
+  </form>
+
+  <h3>글씨 크기</h3>
+  <div class="size-choices">
+    <button class="btn outline size" data-size="0">보통</button>
+    <button class="btn outline size" data-size="1">크게</button>
+    <button class="btn outline size" data-size="2">아주 크게</button>
+  </div>
+
+  <button id="btnInstall" class="btn outline wide" hidden>📲 바탕화면에 설치</button>
+
+  <h3>날씨 자료</h3>
+  <div id="setSource" class="set-value">--</div>
+
+  <button id="settingsClose" class="btn primary wide close-big">닫기</button>
+</div>
+
 <!-- ============ 검색 창 ============ -->
-<div id="search" class="search" hidden role="dialog" aria-label="장소 찾기">
-  <div class="search-head">
+<div id="search" class="overlay" hidden role="dialog" aria-label="장소 찾기">
+  <div class="ov-head">
     <h2 id="searchTitle">장소 찾기</h2>
     <button id="searchClose" class="btn outline small">닫기 ✕</button>
   </div>
   <form id="searchForm" class="search-form">
-    <input id="searchInput" type="search" enterkeyhint="search" autocomplete="off"
-           placeholder="예: 양평군, 마포구청, 부산역">
+    <input id="searchInput" type="search" enterkeyhint="search" autocomplete="off" placeholder="예: 주안역, 인하대병원">
     <button class="btn primary" type="submit">찾기</button>
   </form>
-  <p id="searchHint" class="search-hint">동네 이름이나 건물 이름을 쓰고 <b>찾기</b>를 누르세요.</p>
+  <p id="searchHint" class="search-hint">이름을 쓰고 <b>찾기</b>를 누르세요.</p>
   <ul id="searchResults" class="list results"></ul>
 </div>
 
