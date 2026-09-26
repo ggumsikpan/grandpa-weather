@@ -15,16 +15,28 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: 기상청·에어코리아 자료 받기
+      - name: 기상청·에어코리아 자료 받기 (3회 재시도)
         env:
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
-        run: node scripts/update-weather.js
+        run: |
+          for i in 1 2 3; do
+            if node scripts/update-weather.js; then
+              echo "::notice::${i}번째 시도에서 성공"
+              exit 0
+            fi
+            if [ "$i" -lt 3 ]; then
+              echo "::warning::${i}번째 시도 실패 — 30초 후 재시도"
+              sleep 30
+            fi
+          done
+          echo "::error::3회 재시도 모두 실패 (공공데이터포털 API 응답 없음)"
+          exit 1
       - name: 저장
         run: |
           git config user.name "weather-bot"
