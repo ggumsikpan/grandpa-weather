@@ -14,11 +14,35 @@ const res = {
   json(o) { this.body = o; },
 };
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const out0 = path.join(__dirname, '..', 'data', 'weather.json');
+
+// 기존 자료가 얼마나 오래됐는지 (시간 단위)
+function staleHours() {
+  try {
+    const prev = JSON.parse(fs.readFileSync(out0, 'utf8'));
+    return (Date.now() - Number(prev.fetchedAt)) / 3600e3;
+  } catch { return 999; }
+}
+
 (async () => {
-  await handler({ query: HOME }, res);
-  const b = res.body;
-  if (res.code !== 200 || !b || !b.now || typeof b.now.temp !== 'number' || !b.daily || !b.daily.length) {
-    console.error('실패', res.code, JSON.stringify(b).slice(0, 500));
+  let b = null;
+  for (let i = 0; i < 3; i++) {
+    res.code = 0; res.body = null;
+    try { await handler({ query: HOME }, res); } catch (e) { console.error('호출 오류', String(e && e.message || e)); }
+    b = res.body;
+    const ok = res.code === 200 && b && b.now && typeof b.now.temp === 'number' && b.daily && b.daily.length;
+    if (ok) break;
+    console.error('실패', i + 1, res.code, JSON.stringify(b).slice(0, 300));
+    b = null;
+    if (i < 2) await sleep(20000);
+  }
+  if (!b) {
+    const h = staleHours();
+    // 공공데이터 서버가 잠깐 죽은 것이면 기존 자료를 그대로 두고 조용히 넘어간다.
+    // 24시간 넘게 못 받으면 진짜 고장이므로 실패로 끝내 알림이 가게 한다.
+    if (h < 24) { console.warn('공공데이터 일시 오류 — 기존 자료 유지 (' + h.toFixed(1) + '시간 전 자료)'); return; }
+    console.error('24시간 넘게 자료를 못 받았습니다 (' + h.toFixed(1) + '시간)');
     process.exit(1);
   }
   const out = path.join(__dirname, '..', 'data', 'weather.json');
