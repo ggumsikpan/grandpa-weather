@@ -186,7 +186,21 @@ module.exports = async (req, res) => {
   const jobs = {
     ncst: call(kmaUrl(VS, 'getUltraSrtNcst', { numOfRows: 60, base_date: nD, base_time: pad(nH) + '00', nx, ny })),
     ufc: call(kmaUrl(VS, 'getUltraSrtFcst', { numOfRows: 100, base_date: fD, base_time: pad(fH) + '30', nx, ny })),
-    vil: call(kmaUrl(VS, 'getVilageFcst', { numOfRows: 1500, base_date: vD, base_time: pad(vH) + '00', nx, ny })),
+    // 발표가 늦어 NO_DATA 가 오면 이전 발표 시각으로 최대 2번 더 물어본다
+    vil: (async () => {
+      let d = vD, h = vH, last = null;
+      for (let i = 0; i < 3; i++) {
+        try {
+          return await call(kmaUrl(VS, 'getVilageFcst', { numOfRows: 1500, base_date: d, base_time: pad(h) + '00', nx, ny }));
+        } catch (e) {
+          last = e;
+          const idx = bases.indexOf(h);
+          if (idx > 0) h = bases[idx - 1];
+          else { h = bases[bases.length - 1]; d = addDaysYmd(d, -1); }
+        }
+      }
+      throw last;
+    })(),
     early: (eD === vD && eH === vH) ? Promise.resolve(null)
       : call(kmaUrl(VS, 'getVilageFcst', { numOfRows: 400, base_date: eD, base_time: pad(eH) + '00', nx, ny })),
     midLand: call(kmaUrl('MidFcstInfoService', 'getMidLandFcst', { numOfRows: 10, regId: mid.land, tmFc })),
